@@ -1,11 +1,10 @@
 from PIL import Image
 import numpy as np
-import math
-import hashlib
 import os
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import base64
 import random
+import secrets
 
 # Cryptography 
 key = 'zFS1N0HR+uv7yaEMHHYwhQo+oSk4AHcZVUt4vY6oEHU='
@@ -84,16 +83,14 @@ def random_pixel(n):
     """
     Generates n unique random pixel coordinate(s)
     """
-    pixel_list = set()
+    pixels = [(x, y) for x in range(width) for y in range(height)]
+    global seed
+    seed = secrets.token_hex(32)
+    rng = random.Random(seed)
 
-    while len(pixel_list) < n:
-        y = random.randint(0, height - 1)
-        x = random.randint(0, width - 1)
-
-        pixel_list.add((x, y))
-
-    # print(list(pixel_list))
-    return list(pixel_list)
+    rng.shuffle(pixels)
+    print(f"Your image seed is: {seed}")
+    return pixels[:n]
 
 
 def binary_to_method(binary, coord):
@@ -114,23 +111,49 @@ def hide_pixel(binary):
     # to_be_encoded = binary(encoder(MESSAGE))
     # pixel_list = random_pixel(len(to_be_encoded))
     to_be_encoded = binary
-    pixel_list = random_pixel(len(to_be_encoded)) # generates n random pixels to hide to_be_encoded in
-    # pixel_list serves also as a key for decoding as it gives the order of binaries to be read
 
-    get_pixel_lsb(pixel_list[0])
-    get_pixel_lsb(pixel_list[1])
+    global pixel_list
+    pixel_list = random_pixel(len(to_be_encoded)) # generates n random pixels to hide to_be_encoded in
+
     for bin, pixels in zip(binary, pixel_list):
         if bin == "1":
+            print(f"Pixel {pixels} changed to {bin}")
             lsb_to_one(pixels)
         elif bin == "0":
+            print(f"Pixel {pixels} changed to {bin}")
             lsb_to_zero(pixels)
         else:
             print("Error: binary contains values that are not 1 or 0")
 
-    return pixel_list
+    # return pixel_list
+
+
+def get_pixel_lsb(coord):
+    x, y = coord
+    r, g, b = img_array[y, x]
+
+    r_bin = format(r, '08b')
+    g_bin = format(g, '08b')
+    b_bin = format(b, '08b')
+
+    if r_bin[-1] == g_bin[-1] == b_bin[-1]:
+        return r_bin[-1]
+    else:
+        print("Error: r, g, and b values are not the same. Please run lsb_zero or lsb_one first.")
+    
+
+def pixel_decoder():
+    """
+    Takes pixel data based on the order given in pixel_list and outputs a binary
+    """
+    binary = ""
+    for coords in pixel_list:
+        binary += get_pixel_lsb(coords)
+    print(f"Decoded binary: {binary}")
+
 
 # Testing methods
-def get_pixel_lsb(coord):
+def testing_get_pixel_lsb(coord):
     x, y = coord
     r, g, b = img_array[y, x]
 
@@ -147,11 +170,10 @@ def get_pixel_lsb(coord):
 # print("POST TEST")
 # get_pixel_lsb(rndm[0])
 
-hide_pixel("10")
-
-
-# print(f"Width: {width}, height: {height}")
+hide_pixel("01101101")
+# pixel_decoder()
 
 # Image output
+# print(f"Width: {width}, height: {height}")
 # encoded_img = Image.fromarray(img_array.astype('uint8'))
 # encoded_img.show()
