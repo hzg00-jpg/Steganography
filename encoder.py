@@ -117,10 +117,8 @@ def hide_pixel(binary):
 
     for bin, pixels in zip(binary, pixel_list):
         if bin == "1":
-            print(f"Pixel {pixels} changed to {bin}")
             lsb_to_one(pixels)
         elif bin == "0":
-            print(f"Pixel {pixels} changed to {bin}")
             lsb_to_zero(pixels)
         else:
             print("Error: binary contains values that are not 1 or 0")
@@ -174,6 +172,6 @@ hide_pixel("01101101")
 # pixel_decoder()
 
 # Image output
-# print(f"Width: {width}, height: {height}")
-# encoded_img = Image.fromarray(img_array.astype('uint8'))
-# encoded_img.show()
+print(f"Width: {width}, height: {height}")
+encoded_img = Image.fromarray(img_array.astype('uint8'))
+encoded_img.show()
