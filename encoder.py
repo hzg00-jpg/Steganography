@@ -10,7 +10,7 @@ import secrets
 key = 'zFS1N0HR+uv7yaEMHHYwhQo+oSk4AHcZVUt4vY6oEHU='
 aesgcm = AESGCM(base64.b64decode(key))
 iv = os.urandom(12)
-MESSAGE = 'insert message to be hidden here'
+MESSAGE = 'WES????SI'
 # ---------------
 
 img = Image.open("duck.png").convert("RGB")
@@ -60,18 +60,9 @@ def encoder(msg):
     return ciphertext
 
 
-def binary(ciphertext):
-    """
-    Converts encoder into binary, more suitable for steganography
-    """
-    bin = ''.join(format(byte, '08b') for byte in ciphertext)
-
-    return bin
-
-
 def decoder(cipher):
     """
-    Decodes ciphertext using AES
+    Decodes ciphertext using AES. Takes bytes as input.
     """
     msg = aesgcm.decrypt(iv, cipher, None)
     plaintext = msg.decode('utf-8')
@@ -79,17 +70,35 @@ def decoder(cipher):
     return plaintext
 
 
+def binary(ciphertext):
+    """
+    Converts encoder into binary
+    """
+    bin = ''.join(format(byte, '08b') for byte in ciphertext)
+
+    return bin
+
+def undo_binary(bin):
+    return bytes(
+        int(bin[i:i+8], 2)
+        for i in range(0, len(bin), 8)
+    )
+
+
 def random_pixel(n):
     """
     Generates n unique random pixel coordinate(s)
     """
-    pixels = [(x, y) for x in range(width) for y in range(height)]
+    pixels = [(x, y) for x in range(width - 1) for y in range(height - 1)]
     global seed
-    seed = secrets.token_hex(32)
+
+    seed = secrets.token_hex(20) # length 40
+    ivh = iv.hex() # length 24
     rng = random.Random(seed)
+    leng = len(binary(encoder(MESSAGE)))
 
     rng.shuffle(pixels)
-    print(f"Your image seed is: {seed}")
+    print(f"Your seed is: {seed}{ivh}{leng}") 
     return pixels[:n]
 
 
@@ -107,23 +116,19 @@ def binary_to_method(binary, coord):
             print("Error: binary contains values that are not 1 or 0")
 
 
-def hide_pixel(binary):
-    # to_be_encoded = binary(encoder(MESSAGE))
-    # pixel_list = random_pixel(len(to_be_encoded))
-    to_be_encoded = binary
+def hide_pixel():
+    to_be_encoded = binary(encoder(MESSAGE))
 
     global pixel_list
     pixel_list = random_pixel(len(to_be_encoded)) # generates n random pixels to hide to_be_encoded in
 
-    for bin, pixels in zip(binary, pixel_list):
+    for bin, pixels in zip(to_be_encoded, pixel_list):
         if bin == "1":
             lsb_to_one(pixels)
         elif bin == "0":
             lsb_to_zero(pixels)
         else:
             print("Error: binary contains values that are not 1 or 0")
-
-    # return pixel_list
 
 
 def get_pixel_lsb(coord):
@@ -147,10 +152,10 @@ def pixel_decoder():
     binary = ""
     for coords in pixel_list:
         binary += get_pixel_lsb(coords)
-    print(f"Decoded binary: {binary}")
+    return binary
 
 
-# Testing methods
+# Testing functions
 def testing_get_pixel_lsb(coord):
     x, y = coord
     r, g, b = img_array[y, x]
@@ -162,14 +167,18 @@ def testing_get_pixel_lsb(coord):
     print( f"Random pixel RGB: {(r_bin[-1], g_bin[-1], b_bin[-1])}" )
 # ---------------
 
+# ------------------------------
+# Testing lsb_to_x function
+# ------------------------------
 # rndm = random_pixel(2)
 # print(f"Random pixels: {rndm}")
-# get_pixel_lsb(rndm[0])
+# testing_get_pixel_lsb(rndm[0])
+# lsb_to_zero(rndm[0])
 # print("POST TEST")
-# get_pixel_lsb(rndm[0])
+# testing_get_pixel_lsb(rndm[0])
 
-hide_pixel("01101101")
-# pixel_decoder()
+
+hide_pixel()
 
 # Image output
 print(f"Width: {width}, height: {height}")
