@@ -12,19 +12,26 @@ aesgcm = AESGCM(base64.b64decode(key))
 iv = os.urandom(12)
 # ---------------
 
+# Opening image
 img = Image.open("duck.png").convert("RGB")
 width, height = img.size
 img_array = np.array(img)
 
+# Reading text file
 with open('text.txt', 'r', encoding="utf-8") as file:
     text = file.read()   
-
 
 MESSAGE = text
 
 def lsb_modify(coord, bit):
     """
-    Bit can be 0 or 1
+    Modifies the least-significant-bit of a given pixel to 1 or 0.
+
+    @param coord: Coordinates of pixel (x, y, z) to be modified. x and y are spatial coordinates, while
+    z is the identifier for the colors red green blue. z can either be 0 (red), 1 (green), or 2 (blue)
+
+    @param bit: 1 or 0. The desired output of the least significant bit.
+    @return: Nothing. Only modifies the pixels of uploaded image.
     """
     x, y, z = coord
 
@@ -54,7 +61,10 @@ def lsb_modify(coord, bit):
 
 def encoder(msg):
     """
-    Encodes plaintext using AES
+    Encodes plaintext using AES.
+
+    @param msg: (str) message to be encoded. 
+    @return: (bytes) encoded ciphertext
     """
     plaintext = msg.encode('utf-8')
     ciphertext = aesgcm.encrypt(iv, plaintext, None)
@@ -64,7 +74,10 @@ def encoder(msg):
 
 def decoder(cipher):
     """
-    Decodes ciphertext using AES. Takes bytes as input.
+    Decodes ciphertext using AES. 
+
+    @param cipher: (bytes) ciphertext created from encoder function
+    @return: (str) decoded plaintext.
     """
     msg = aesgcm.decrypt(iv, cipher, None)
     plaintext = msg.decode('utf-8')
@@ -74,22 +87,37 @@ def decoder(cipher):
 
 def binary(ciphertext):
     """
-    Converts encoder into binary
+    Converts ciphertext (bytes) into binary for lsb_modify
+
+    @param cipher: (bytes) 
+    @return: (bytes) in binary
     """
     bin = ''.join(format(byte, '08b') for byte in ciphertext)
 
     return bin
 
-def undo_binary(bin):
-    return bytes(
-        int(bin[i:i+8], 2)
-        for i in range(0, len(bin), 8)
-    )
+
+def undo_binary(binary):
+    """
+    Undoes the binary function. Converts binary back into raw bytes.
+
+    @param binary: (bytes) binary
+    @return: (bytes)
+    """
+    result = []
+
+    for i in range(0, len(binary), 8):
+        result.append(int(binary[i:i+8], 2))
+
+    return bytes(result)
 
 
 def random_pixel(n):
     """
     Generates n unique random pixel coordinate(s)
+
+    @param n: (int) 
+    @return: (list) a list of n coordinates
     """
     pixels = [(x, y, z) for x in range(width - 1) for y in range(height - 1) for z in range(3)]
     global seed
@@ -105,6 +133,11 @@ def random_pixel(n):
 
 
 def hide_pixel():
+    """
+    Runs lsb_modify a certain amount of times.
+
+    @return: nothing
+    """
     to_be_encoded = binary(encoder(MESSAGE))
 
     global pixel_list
@@ -120,6 +153,12 @@ def hide_pixel():
 
 
 def get_pixel_lsb(coord):
+    """
+    Returns the least-significant bit of a color of a specified pixel.
+
+    @param coord: coordinates (x, y, z) of the pixel
+    @return: (str) the lsb of the color specified by z
+    """
     x, y, z = coord
     r, g, b = img_array[y, x]
 
@@ -137,18 +176,14 @@ def get_pixel_lsb(coord):
         print("Error: z out of bounds")
     
 
-def pixel_decoder():
-    """
-    Takes pixel data based on the order given in pixel_list and outputs a binary
-    """
-    binary = ""
-    for coords in pixel_list:
-        binary += get_pixel_lsb(coords)
-    return binary
-
-
 # Testing functions
 def testing_get_pixel_lsb(coord):
+    """
+    Returns individual pixel data. For testing purposes. Unlike get_pixel_lsb, this returns nothing.
+    
+    @param coord: coordinates (x, y, z) of the pixel
+    @return: a print statement
+    """
     x, y, _ = coord
     r, g, b = img_array[y, x]
 
@@ -159,7 +194,24 @@ def testing_get_pixel_lsb(coord):
     print( f"Random pixel RGB: {(r_bin[-1], g_bin[-1], b_bin[-1])}" )
 
 
+def pixel_decoder():
+    """
+    Takes pixel data based on the order given in pixel_list and outputs a binary
+
+    @return: (str) a long string of binaries
+    """
+    binary = ""
+    for coords in pixel_list:
+        binary += get_pixel_lsb(coords)
+    return binary
+
+
 def aesgcm_decrypt():
+    """
+    Decrypts the binary message from pixel_decoder.
+    
+    @return: (str) the initial encoded message
+    """
     returned_binary = pixel_decoder()
     un_binary = undo_binary(returned_binary)
     plaintext = aesgcm.decrypt(iv, un_binary, None)
