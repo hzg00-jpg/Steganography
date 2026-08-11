@@ -10,25 +10,29 @@ key = 'zFS1N0HR+uv7yaEMHHYwhQo+oSk4AHcZVUt4vY6oEHU='
 aesgcm = AESGCM(base64.b64decode(key))
 # --------------------------------------------------
 
-ENCODER_SEED = "1e76b1d3c935751f4ad8585d4a7b489d0ed40872744639b6b60abdf07748b799200"
+ENCODER_SEED = "79f23210d4d5f115ab41f5e2bf86e89946d715e0df7800e485afb5bbfc82726e3032"
 
-img = Image.open("tmp_la2hw4v.PNG").convert("RGB")
+img = Image.open("tmp226nrgc4.PNG").convert("RGB")
 
 width, height = img.size
 img_array = np.array(img)
 
 def get_pixel_lsb(coord):
-    x, y = coord
+    x, y, z = coord
     r, g, b = img_array[y, x]
 
     r_bin = format(r, '08b')
     g_bin = format(g, '08b')
     b_bin = format(b, '08b')
 
-    if r_bin[-1] == g_bin[-1] == b_bin[-1]:
+    if z == 0:
         return r_bin[-1]
+    elif z == 1:
+        return g_bin[-1]
+    elif z == 2: 
+        return b_bin[-1]
     else:
-        print("Error: r, g, and b values are not the same. Please run lsb_zero or lsb_one first.")
+        print("Error: z out of bounds")
 
 
 def binary(ciphertext):
@@ -43,7 +47,7 @@ def binary(ciphertext):
 def pixel_decoder():
     binary = ""
 
-    pixels = [(x, y) for x in range(width - 1) for y in range(height - 1)]
+    pixels = [(x, y, z) for x in range(width - 1) for y in range(height - 1) for z in range(3)]
     seed = from_seed()
     msg_length = from_seed("length")
 
@@ -52,7 +56,6 @@ def pixel_decoder():
     pixel_list = pixels[:msg_length]
 
     for coords in pixel_list:
-        # testing_get_pixel_lsb(coords)
         binary += get_pixel_lsb(coords)
     return binary
 
@@ -86,7 +89,7 @@ def aesgcm_decrypt():
 
 # Testing methods
 def testing_get_pixel_lsb(coord):
-    x, y = coord
+    x, y, _ = coord
     r, g, b = img_array[y, x]
 
     r_bin = format(r, '08b')
