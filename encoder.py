@@ -8,6 +8,7 @@ import secrets
 
 # Cryptography 
 key = 'zFS1N0HR+uv7yaEMHHYwhQo+oSk4AHcZVUt4vY6oEHU='
+# key = base64.b64encode(os.urandom(32)) to generate
 aesgcm = AESGCM(base64.b64decode(key))
 iv = os.urandom(12)
 # ---------------
@@ -22,6 +23,7 @@ with open('text.txt', 'r', encoding="utf-8") as file:
     text = file.read()   
 
 MESSAGE = text
+
 
 def lsb_modify(coord, bit):
     """
