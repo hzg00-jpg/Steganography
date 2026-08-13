@@ -243,7 +243,7 @@ hide_pixel()
 print(f"Width: {width}, height: {height}")
 
 metadata = PngInfo()
-metadata.add_text("Hash", gseed)
+metadata.add_text("tEXt", gseed)
 
 encoded_img = Image.fromarray(img_array.astype('uint8'))
 
