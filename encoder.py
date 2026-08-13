@@ -1,4 +1,5 @@
 from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 import numpy as np
 import os
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -16,6 +17,7 @@ iv = os.urandom(12)
 # Opening image
 img = Image.open("duck.png").convert("RGB")
 width, height = img.size
+total_pixels = width * height
 img_array = np.array(img)
 
 # Reading text file
@@ -96,6 +98,9 @@ def binary(ciphertext):
     """
     bin = ''.join(format(byte, '08b') for byte in ciphertext)
 
+    global binary_length
+    binary_length = len(bin)
+
     return bin
 
 
@@ -122,15 +127,16 @@ def random_pixel(n):
     @return: (list) a list of n coordinates
     """
     pixels = [(x, y, z) for x in range(width - 1) for y in range(height - 1) for z in range(3)]
-    global seed
 
     seed = secrets.token_hex(20) # length 40
     ivh = iv.hex() # length 24
     rng = random.Random(seed)
     leng = len(binary(encoder(MESSAGE)))
+    global gseed
+    gseed = seed + ivh + str(leng)
 
     rng.shuffle(pixels)
-    print(f"Your seed is: {seed}{ivh}{leng}") 
+    print(f"Your seed is: {gseed}") 
     return pixels[:n]
 
 
@@ -235,6 +241,18 @@ hide_pixel()
 
 # Image output
 print(f"Width: {width}, height: {height}")
+
+metadata = PngInfo()
+metadata.add_text("Hash", gseed)
+
 encoded_img = Image.fromarray(img_array.astype('uint8'))
-encoded_img.show() 
+
+print(f"Total pixels: {total_pixels}")
+print(f"Number of pixels modified: {binary_length}")
+print(f"Percentage of pixels used: {(binary_length / total_pixels):.2%}")
+
+# encoded_img.show()
+encoded_img.save("duck_exported.png", pnginfo=metadata)
+
+
 
