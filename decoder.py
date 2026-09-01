@@ -10,9 +10,9 @@ key = 'zFS1N0HR+uv7yaEMHHYwhQo+oSk4AHcZVUt4vY6oEHU='
 aesgcm = AESGCM(base64.b64decode(key))
 # --------------------------------------------------
 
-ENCODER_SEED = "79f23210d4d5f115ab41f5e2bf86e89946d715e0df7800e485afb5bbfc82726e3032"
+ENCODER_SEED = "d7dd2f396bfbeae5dd1319656b3c9c43ece7aeefe9f4b65efaa89f9840fa61fe416"
 
-img = Image.open("tmp226nrgc4.PNG").convert("RGB")
+img = Image.open("duck_exported.PNG").convert("RGB")
 
 width, height = img.size
 img_array = np.array(img)
