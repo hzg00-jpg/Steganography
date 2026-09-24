@@ -15,4 +15,4 @@ To decode, make sure that the image exported by `encoder.py` is in the same dire
 
 Run:
 
-`C:\exiftool\exiftool.exe "C:\Users\You\Downloads\Steganography\duck_exported.png"`, making sure to change `You.` The metadata is listed next to `TE Xt`.
+`C:\exiftool\exiftool.exe "C:\Users\You\Downloads\Steganography\duck_exported.png"`, making sure to change `You`. The metadata is listed next to `TE Xt`.
